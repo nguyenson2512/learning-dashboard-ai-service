@@ -57,6 +57,19 @@ jobs:
             docker build -t $REPO:$CIRCLE_SHA1 -t $REPO:latest -f $CTX/Dockerfile $CTX
             docker push $REPO:$CIRCLE_SHA1
             docker push $REPO:latest
+  deploy-to-ec2:
+    executor: python
+    steps:
+      - run:
+          name: Trigger EC2 Pull via SSM
+          command: |
+            pip install awscli
+            aws ssm send-command \
+              --document-name "AWS-RunShellScript" \
+              --comment "Pull images and restart services" \
+              --targets "Key=tag:Name,Values=${PROJECT_NAME}-${ENVIRONMENT}-app-server" \
+              --parameters commands='["docker compose pull frontend || true","docker compose pull backend || true","docker compose pull ai-service || true","docker compose pull nginx || true","docker compose up -d || true"]' \
+              --region $AWS_REGION
 
 workflows:
   version: 2
@@ -67,4 +80,7 @@ workflows:
           requires: [build]
           service: ai-service
           context_dir: .
+          context: aws-creds
+      - deploy-to-ec2:
+          requires: [docker-build-push]
           context: aws-creds
