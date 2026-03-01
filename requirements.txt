@@ -1,0 +1,6 @@
+# Use Python 3.12 or 3.13 for this project (Python 3.14 is not yet supported by pydantic).
+python-dotenv>=1.0.0
+fastapi>=0.115.0,<0.116
+uvicorn[standard]>=0.27.1
+openai>=1.12.0
+pydantic>=2.10.0,<3
